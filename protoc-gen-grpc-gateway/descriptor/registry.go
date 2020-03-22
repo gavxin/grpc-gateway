@@ -79,6 +79,9 @@ type Registry struct {
 	// disableDefaultErrors disables the generation of the default error types.
 	// This is useful for users who have defined custom error handling.
 	disableDefaultErrors bool
+
+  // Generate default path and body even without annotations
+  autoMapping bool
 }
 
 type repeatedFieldSeparator struct {
@@ -495,6 +498,14 @@ func (r *Registry) SetDisableDefaultErrors(use bool) {
 // GetDisableDefaultErrors returns disableDefaultErrors
 func (r *Registry) GetDisableDefaultErrors() bool {
 	return r.disableDefaultErrors
+}
+
+func (r *Registry) SetAutoMapping(use bool) {
+  r.autoMapping = use
+}
+
+func (r *Registry) GetAutoMapping() bool {
+  return r.autoMapping
 }
 
 // sanitizePackageName replaces unallowed character in package name

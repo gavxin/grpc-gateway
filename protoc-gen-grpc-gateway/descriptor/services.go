@@ -174,11 +174,73 @@ func (r *Registry) newMethod(svc *Service, md *descriptor.MethodDescriptorProto,
 		return nil
 	}
 
-	for _, opts := range optsList {
-		if err := applyOpts(opts); err != nil {
+  newAutoBinding := func(idx int)(*Binding, error) {
+		var (
+			httpMethod   string
+			pathTemplate string
+		)
+    httpMethod = "POST"
+    pathTemplate = "/" + svc.File.GetPackage() + "." + svc.GetName() + "/" + md.GetName()
+    glog.Warningf("Path template is %s", pathTemplate)
+
+		parsed, err := httprule.Parse(pathTemplate)
+		if err != nil {
 			return nil, err
 		}
+		tmpl := parsed.Compile()
+
+		if md.GetClientStreaming() && len(tmpl.Fields) > 0 {
+			return nil, fmt.Errorf("cannot use path parameter in client streaming")
+		}
+
+		b := &Binding{
+			Method:     meth,
+			Index:      idx,
+			PathTmpl:   tmpl,
+			HTTPMethod: httpMethod,
+		}
+
+		for _, f := range tmpl.Fields {
+			param, err := r.newParam(meth, f)
+			if err != nil {
+				return nil, err
+			}
+			b.PathParams = append(b.PathParams, param)
+		}
+
+		// TODO(yugui) Handle query params
+
+		b.Body, err = r.newBody(meth, "*")
+		if err != nil {
+			return nil, err
+		}
+
+		return b, nil
+  }
+
+	applyOptsAuto := func() error {
+		b, err := newAutoBinding(len(meth.Bindings))
+		if err != nil {
+			return err
+		}
+
+		if b != nil {
+			meth.Bindings = append(meth.Bindings, b)
+		}
+
+		return nil
 	}
+
+  
+  if r.GetAutoMapping() {
+    applyOptsAuto()
+  } else {
+    for _, opts := range optsList {
+      if err := applyOpts(opts); err != nil {
+        return nil, err
+      }
+    }
+  }
 
 	return meth, nil
 }

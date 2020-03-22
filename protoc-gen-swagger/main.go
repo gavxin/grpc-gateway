@@ -29,6 +29,7 @@ var (
 	useFQNForSwaggerName       = flag.Bool("fqn_for_swagger_name", false, "if set, the object's swagger names will use the fully qualify name from the proto definition (ie my.package.MyMessage.MyInnerMessage")
 	useGoTemplate              = flag.Bool("use_go_templates", false, "if set, you can use Go templates in protofile comments")
 	disableDefaultErrors       = flag.Bool("disable_default_errors", false, "if set, disables generation of default errors. This is useful if you have defined custom error handling")
+	autoMapping                = flag.Bool("auto_mapping", false, "if set, will generate default path and body even without annotations")
 )
 
 // Variables set by goreleaser at build time
@@ -82,6 +83,7 @@ func main() {
 	reg.SetUseFQNForSwaggerName(*useFQNForSwaggerName)
 	reg.SetUseGoTemplate(*useGoTemplate)
 	reg.SetDisableDefaultErrors(*disableDefaultErrors)
+  reg.SetAutoMapping(*autoMapping)
 	if err := reg.SetRepeatedPathParamSeparator(*repeatedPathParamSeparator); err != nil {
 		emitError(err)
 		return
